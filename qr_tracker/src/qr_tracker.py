@@ -30,7 +30,7 @@ if hd_cam == 1:
 cap.set(10,0.5)
 
 # initialization for template matching
-template = cv2.imread('/home/bare/catkin_ros/src/shop-robo/qr_tracker/src/qr_match.png', 0)
+template = cv2.imread('/home/bare/catkin_ros/src/shop-robo/qr_tracker/src/qr_match.png', 0) # change image path to avoid error
 
 w, h = template.shape[::-1]
 template_2 = template.copy()
