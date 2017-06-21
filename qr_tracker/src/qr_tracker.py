@@ -20,15 +20,18 @@ cap = cv2.VideoCapture(hd_cam)
 #fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 #out = cv2.VideoWriter('QR_tracking.avi',fourcc, 10.0, (1280,720))
 
-cap.set(3,1280)
-cap.set(4,720)
+cap.set(3,640)
+cap.set(4,480)
 cap.set(12,0.64)
 cap.set(16,1.0)
 if hd_cam == 1:
-	cap.set(3,1280)
-	cap.set(4,720)
+	cap.set(3,640)
+	cap.set(4,480)
 
 cap.set(10,0.5)
+
+width = 640
+height = 480
 
 # initialization for template matching
 template = cv2.imread('/home/bare/catkin_ros/src/shop-robo/qr_tracker/src/qr_match.png', 0) # change image path to avoid error
@@ -41,7 +44,7 @@ Ts = 0.02
 
 Pk = np.eye(4,k=0,dtype=float)*100
 
-xk_ = np.transpose(np.matrix([1280/2,720/2,0,0]))
+xk_ = np.transpose(np.matrix([width/2,height/2,0,0]))
 xk = xk_
 
 FI = np.matrix([[1,0,Ts,0],
@@ -56,8 +59,8 @@ Q = np.eye(4,k=0,dtype=float)*1
 
 R = np.eye(2,k=0,dtype=float)*1
  
-last_yk = np.matrix([640.0, 360.0])
-yk = np.matrix([640.0, 360.0])
+last_yk = np.matrix([width/2, height/2])
+yk = np.matrix([width/2, height/2])
 
 last_qr_center = []
 qr_center = []
@@ -145,10 +148,10 @@ while not rospy.is_shutdown():
 					qr_pose.append([centroids[i],i])
 					cont_no.append(i)
 
-	max_dist = math.sqrt(pow(1280-0,2) + pow(720-0,2))
-	lu = [1280,720]
-	ru = [0,720]
-	ld = [1280,0]
+	max_dist = math.sqrt(pow(width-0,2) + pow(height-0,2))
+	lu = [width,height]
+	ru = [0,height]
+	ld = [width,0]
 
 	### determine the position of the markers respect to the QR-code ###
 	# qr marker extrapolation 		
@@ -156,10 +159,10 @@ while not rospy.is_shutdown():
 		if math.sqrt(pow(qr_pose[i][0][0]-0,2) + pow(qr_pose[i][0][1]-0,2)) < math.sqrt(pow(0-lu[0],2) + pow(0-lu[1],2)):
 			lu = [qr_pose[i][0][0],qr_pose[i][0][1]]
 
-		if math.sqrt(pow(qr_pose[i][0][0]-1280,2) + pow(qr_pose[i][0][1]-0,2)) < math.sqrt(pow(1280-ru[0],2) + pow(0-ru[1],2)):
+		if math.sqrt(pow(qr_pose[i][0][0]-width,2) + pow(qr_pose[i][0][1]-0,2)) < math.sqrt(pow(width-ru[0],2) + pow(0-ru[1],2)):
 			ru = [qr_pose[i][0][0],qr_pose[i][0][1]]
 
-		if math.sqrt(pow(qr_pose[i][0][0]-0,2) + pow(qr_pose[i][0][1]-720,2)) < math.sqrt(pow(0-ld[0],2) + pow(720-ld[1],2)):
+		if math.sqrt(pow(qr_pose[i][0][0]-0,2) + pow(qr_pose[i][0][1]-height,2)) < math.sqrt(pow(0-ld[0],2) + pow(height-ld[1],2)):
 			ld = [qr_pose[i][0][0],qr_pose[i][0][1]]
 	
 	# image averaging
@@ -213,16 +216,16 @@ while not rospy.is_shutdown():
 #		print template_vel_diff
 
 	
-	if lu[0] != 1280 and lu[1] != 720:
+	if lu[0] != width and lu[1] != height:
 		cv2.circle(im,(lu[0],lu[1]), 6, (0,0,255), -1)
 
-	if ru[0] != 0 and ru[1] != 720 and ru != lu:
+	if ru[0] != 0 and ru[1] != height and ru != lu:
 		cv2.circle(im,(ru[0],ru[1]), 6, (0,0,255), -1)
 
-	if ld[0] != 1280 and ld[1] != 0 and ld != lu and ld != ru:
+	if ld[0] != width and ld[1] != 0 and ld != lu and ld != ru:
 		cv2.circle(im,(ld[0],ld[1]), 6, (0,0,255), -1)	
 
-	if lu[0] != 1280 and lu[1] != 720 and ru[0] != 0 and ru[1] != 720 and ld[0] != 1280 and ld[1] != 0:
+	if lu[0] != width and lu[1] != height and ru[0] != 0 and ru[1] != height and ld[0] != width and ld[1] != 0:
 		cv2.line(im,(lu[0],lu[1]),(ru[0],ru[1]),(0,255,0),2)
 		cv2.line(im,(lu[0],lu[1]),(ld[0],ld[1]),(0,255,0),2)
 		cv2.line(im,(ld[0],ld[1]),(ru[0],ru[1]),(0,255,0),2)
@@ -263,13 +266,13 @@ while not rospy.is_shutdown():
 	##########################################################
 
 	# measurement
-	if lu != ld and lu != ru and lu != [1280,720] and ru != [0,720] and ld != [1280,0]:	
+	if lu != ld and lu != ru and lu != [width,height] and ru != [0,height] and ld != [width,0]:	
 		last_yk = yk
 		yk = np.matrix([float(qr_center[0]), float(qr_center[1])])
 		scale = (float(qr_a)/float(200))*1.5
 		R = np.eye(2,k=0,dtype=float)*1
 		print scale
-		qr_scale.data = float(qr_area)/float((1280*720))*100
+		qr_scale.data = float(qr_area)/float((width*height))*100
 		pub_scale.publish(qr_scale)
 		
 		if abs((math.sqrt(pow(lu[0]-ru[0],2) + pow(lu[1]-ru[1],2)))/(math.sqrt(pow(lu[0]-ld[0],2) + pow(lu[1]-ld[1],2)))) <= 1:

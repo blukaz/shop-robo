@@ -8,16 +8,19 @@ from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32
 
+global camera_width
+camera_width = 640
+
 def call_qr_pose(data):
 	r = rospy.Rate(50);
 	pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 	
 	turn_cmd = Twist()
 
-	if ((data.x - 1280/2) > -50 and (data.x - 1280/2) < 50):
+	if ((data.x - camera_width/2) > -50 and (data.x - camera_width/2) < 50):
 		rospy.loginfo("in deadzone")
 	else:
-		turn_cmd.angular.z = math.pi/10 * ((data.x - 1280/2)/(1280/2))
+		turn_cmd.angular.z = math.pi/10 * ((data.x - camera_width/2)/(camera_width/2))
 		pub.publish(turn_cmd)
 		r.sleep()
 		rospy.loginfo("outside deadzone")
