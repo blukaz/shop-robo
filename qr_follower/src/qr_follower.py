@@ -9,13 +9,10 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32
 
 def call_qr_pose(data):
-	r = rospy.Rate(20);
+	r = rospy.Rate(50);
 	pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 	
 	turn_cmd = Twist()
-
-	rospy.loginfo("x: %f", data.x)
-	rospy.loginfo("y: %f", data.y)
 
 	if ((data.x - 1280/2) > -50 and (data.x - 1280/2) < 50):
 		rospy.loginfo("in deadzone")
@@ -35,7 +32,7 @@ def call_qr_scale(data):
 
 	move_cmd = Twist()
 
-	rospy.loginfo("x: %f", data.data)
+	rospy.loginfo("scale: %f", data.data)
 	
 	if ( data.data > 2 ):
 		move_cmd.linear.x = 0.0
