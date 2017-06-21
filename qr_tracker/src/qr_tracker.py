@@ -8,6 +8,7 @@ from numpy.linalg import inv
 import roslib
 import rospy
 from geometry_msgs.msg import Pose2D
+from std_msgs.msg import Float32
 import numpy as np;
  
 # Read image
@@ -70,9 +71,12 @@ im_avg = 0
 # initialization of pose2d msg 
 qr_pose2d = Pose2D()
 
+qr_scale = Float32()
+
 while not rospy.is_shutdown():
 
-    	pub = rospy.Publisher('qr_pose2d', Pose2D, queue_size=0)
+    	pub_pose = rospy.Publisher('qr_pose2d', Pose2D, queue_size=0)
+    	pub_scale = rospy.Publisher('qr_scale', Float32, queue_size=0)
     	rospy.init_node('qr_pose2d', anonymous=True)
     	rate = rospy.Rate(int(1/Ts)) # 50hz
 
@@ -146,7 +150,7 @@ while not rospy.is_shutdown():
 	ru = [0,720]
 	ld = [1280,0]
 
-	### determine the position of the markers in respect to the QR-code ###
+	### determine the position of the markers respect to the QR-code ###
 	# qr marker extrapolation 		
 	for i in range(0,len(qr_pose)):
 		if math.sqrt(pow(qr_pose[i][0][0]-0,2) + pow(qr_pose[i][0][1]-0,2)) < math.sqrt(pow(0-lu[0],2) + pow(0-lu[1],2)):
@@ -264,7 +268,10 @@ while not rospy.is_shutdown():
 		yk = np.matrix([float(qr_center[0]), float(qr_center[1])])
 		scale = (float(qr_a)/float(200))*1.5
 		R = np.eye(2,k=0,dtype=float)*1
-		print (math.sqrt(pow(lu[0]-ru[0],2) + pow(lu[1]-ru[1],2)))/(math.sqrt(pow(lu[0]-ld[0],2) + pow(lu[1]-ld[1],2)))
+		print scale
+		qr_scale.data = float(qr_area)/float((1280*720))*100
+		pub_scale.publish(qr_scale)
+		
 		if abs((math.sqrt(pow(lu[0]-ru[0],2) + pow(lu[1]-ru[1],2)))/(math.sqrt(pow(lu[0]-ld[0],2) + pow(lu[1]-ld[1],2)))) <= 1:
 			qr_pose2d.theta = (180/3.14)*math.acos((math.sqrt(pow(lu[0]-ru[0],2) + pow(lu[1]-ru[1],2)))/(math.sqrt(pow(lu[0]-ld[0],2) + pow(lu[1]-ld[1],2))))
 		
@@ -310,7 +317,7 @@ while not rospy.is_shutdown():
 	qr_pose2d.x = xk[0,0]
 	qr_pose2d.y = xk[1,0]
 #	qr_pose2d.theta = 0
-	pub.publish(qr_pose2d)
+	pub_pose.publish(qr_pose2d)
         rate.sleep()
 
 	if cv2.waitKey(1) & 0xFF == ord('q'):
